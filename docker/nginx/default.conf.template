@@ -1,0 +1,75 @@
+# Сгенерировать уникальный идентификатор запроса формата: 12345678-1234-1234-1234-1234
+map $request_id $formatted_id {
+  "~*(?<p1>[0-9a-f]{8})(?<p2>[0-9a-f]{4})(?<p3>[0-9a-f]{4})(?<p4>[0-9a-f]{4})(?<p5>.*)$" "${p1}-${p2}-${p3}-${p4}-${p5}";
+}
+
+map $http_x_request_id $uuid {
+  default   "${formatted_id}";
+  ~*        "${http_x_request_id}";
+}
+
+# Enable CORS
+# Пояснения можно посмотреть в статье https://ibnrubaxa.medium.com/nginx-vs-cors-7a63029d9a34
+variables_hash_bucket_size 128;
+map $http_origin $cors_enabled {
+    # Stoplight - web-документация для выполнения запросов из панели управления
+    "https://webvork.stoplight.io" 'true';
+    # Gitlab - выполняет запросы из встроенного сваггер-клиента.
+    "https://gitlab.webvork.com" 'true';
+    # (прод) Webvork и поддомены - лк менеджера и вебмастера
+    "~^.*\.?webvork\.com$" 'true';
+    # (прод) Bestcallcentre и поддомены - лк оператора
+    "~^.*\.?bestcallcentre\.info$" 'true';
+    # (стейдж) Webvork и поддомены - лк менеджера и вебмастера
+    "~^.*\.?webvork\.ru$" 'true';
+    # (стейдж) Bestcallcentre и поддомены - лк оператора
+    "~^.*\.?bestcallcentre\.webvork\.ru$" 'true';
+    # (локально) Webvork и поддомены - лк менеджера и вебмастера
+    "~^.*\.?webvork\.test$" 'true';
+    # (локально) Bestcallcentre и поддомены - лк оператора
+    "~^.*\.?bestcallcentre\.test$" 'true';
+    # (локально) Кастомные локальные решения на произвольных портах
+    "~^.*\.?localhost:?\d*$" 'true';
+}
+
+server {
+    listen 80;
+
+    set $index_file "public/index.php";
+    set $root "/app";
+
+    root $root;
+    index $index_file;
+
+    error_log /dev/stderr;
+    access_log /dev/stdout json;
+
+    proxy_set_header X-Request-ID $uuid;
+    add_header X-Request-ID $uuid;
+
+    location ~* \.(js|css|png|html)$ {
+        root         $root/public;
+        access_log   off;
+    }
+
+    location ~ [^/]\.php(/|$) {
+
+        # Enable CORS cookies for all
+        set $cors_allow_credentials 'true';
+
+        # Launch CORS headers
+        include 'nginx-cors/cors.conf';
+
+        resolver 127.0.0.11;
+        fastcgi_pass ${FASTCGI_PASS};
+        fastcgi_index $root/$index_file;
+        include fastcgi_params;
+        fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+        fastcgi_param PATH_INFO       $fastcgi_path_info;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location / {
+        try_files $uri $uri/ /$index_file?$query_string;
+    }
+}

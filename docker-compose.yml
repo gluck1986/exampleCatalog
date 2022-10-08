@@ -1,0 +1,55 @@
+services:
+  php:
+    environment:
+      solr_host: solr
+      solr_port: 8983
+      solr_path: "/"
+      solr_core: gettingstarted
+      mysql_host: mysql
+      mysql_user: root
+      mysql_port: 3306
+      mysql_pass: mysql
+      mysql_db: products
+    build:
+      context: ./
+      dockerfile: ./docker/php-fpm/Dockerfile
+    working_dir: /app
+    networks:
+      - default
+  nginx:
+    build: ./docker/nginx
+    depends_on:
+      - php
+#    restart: always
+    environment:
+      FASTCGI_PASS: php:9000
+    networks:
+      - default
+  solr:
+    image: solr:8.7.0
+    ports:
+      - "8981:8983"
+    volumes:
+      - datasolr:/var/solr
+      - /var/solr/data/new_core'
+    command:
+      - solr-precreate
+      - gettingstarted
+  mysql:
+    image: mysql:8.0
+    cap_add:
+      - SYS_NICE
+#    restart: always
+    environment:
+      - MYSQL_DATABASE=products
+      - MYSQL_ROOT_PASSWORD=mysql
+    ports:
+      - '3306:3306'
+    volumes:
+      - dbmysql:/var/lib/mysql
+#      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+networks:
+  default:
+volumes:
+  datasolr:
+  dbmysql:

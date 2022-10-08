@@ -1,0 +1,7 @@
+services:
+  php:
+    volumes:
+      - ./app:/app
+  nginx:
+    ports:
+      - 8080:80

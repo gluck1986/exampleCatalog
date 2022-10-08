@@ -1,0 +1,49 @@
+{
+  "name": "gluck1986/catalog",
+  "description": "catalog",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Kirill Kikimov",
+      "email": "gluck1986@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": "~8.1.0",
+    "laminas/laminas-servicemanager": "3.18.x-dev",
+    "laminas/laminas-diactoros": "2.18.x-dev",
+    "laminas/laminas-httphandlerrunner": "2.3.x-dev",
+    "phpoption/phpoption": "1.9.x-dev",
+    "vlucas/phpdotenv": "5.4.x-dev",
+    "league/route": "6.x-dev",
+    "solarium/solarium": "dev-master",
+    "psr/http-client": "1.0.x-dev",
+    "nyholm/psr7": "^1.5",
+    "symfony/http-client": "6.2.x-dev",
+    "symfony/event-dispatcher": "6.2.x-dev",
+    "httpsoft/http-response": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "App/"
+    },
+    "files": [
+      "router/routes.php"
+    ]
+  },
+  "scripts": {
+    "post-root-package-install": [
+      "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+    ],
+    "cs-check": "phpcs",
+    "cs-fix": "phpcbf"
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.0@dev",
+    "heroku/heroku-buildpack-php": "dev-main",
+    "vimeo/psalm": "5.x-dev",
+    "rector/rector": "0.14.x-dev"
+  }
+}
