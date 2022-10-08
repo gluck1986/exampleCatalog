@@ -26,6 +26,7 @@ class ConfigFactory
             myPort: empty(getenv('mysql_port')) ? 3306 : (int)getenv('mysql_port'),
             myPass:getenv('mysql_pass') ?? '',
             myDbName:getenv('mysql_db') ?? '',
+            specPath: dirname(__DIR__, 3) . '/spec/spec.yaml',
         );
     }
 }

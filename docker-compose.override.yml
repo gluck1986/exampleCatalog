@@ -3,5 +3,7 @@ services:
     volumes:
       - ./app:/app
   nginx:
+#    environment:
+#      FASTCGI_PASS: php:9000
     ports:
       - 8080:80

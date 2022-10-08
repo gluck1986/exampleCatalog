@@ -24,9 +24,9 @@ class App
     {
         $this->config = $config;
         $this->request = $request;
-        $this->router = RouterFactory::buildRouter($this);
         $this->solrClient = (new SolrClientFactory())->factory($config);
         $this->pdo = MySqlPdoFactory::buildPdo($config);
+        $this->router = RouterFactory::buildRouter($this);
     }
 
     /**

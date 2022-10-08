@@ -4,6 +4,7 @@ namespace Routes;
 
 use App\Action\TestAction;
 use App\Common\App;
+use App\Common\Factories\ValidatorMiddlewareFactory;
 use App\Http\Middleware\BodyParamsMiddleware;
 use Laminas\Diactoros\ResponseFactory;
 use League\Route\RouteGroup;
@@ -17,6 +18,13 @@ function init(Router $router, App $app)
         ->setStrategy(new ApplicationStrategy())
         ->group('', function (RouteGroup $group) use ($app) {
             $group->middleware(new BodyParamsMiddleware());
-            $group->post('/test', new TestAction($app->getSolrClient(), $app->getPdo()));
+            $group->middleware(ValidatorMiddlewareFactory::make($app->getConfig())->factory());
+
+            $group->post('/catalog', new TestAction($app->getSolrClient()))
+                ->middleware(new BodyParamsMiddleware());;
+
         })->setStrategy(new JsonStrategy(new ResponseFactory()));
+
+    $router->post('/test', new TestAction($app->getSolrClient()))
+        ->middleware(new BodyParamsMiddleware());;
 }

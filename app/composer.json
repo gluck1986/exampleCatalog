@@ -23,7 +23,8 @@
     "nyholm/psr7": "^1.5",
     "symfony/http-client": "6.2.x-dev",
     "symfony/event-dispatcher": "6.2.x-dev",
-    "httpsoft/http-response": "dev-master"
+    "httpsoft/http-response": "dev-master",
+    "league/openapi-psr7-validator": "dev-master"
   },
   "autoload": {
     "psr-4": {

@@ -13,21 +13,7 @@ map $http_x_request_id $uuid {
 variables_hash_bucket_size 128;
 map $http_origin $cors_enabled {
     # Stoplight - web-документация для выполнения запросов из панели управления
-    "https://webvork.stoplight.io" 'true';
-    # Gitlab - выполняет запросы из встроенного сваггер-клиента.
-    "https://gitlab.webvork.com" 'true';
-    # (прод) Webvork и поддомены - лк менеджера и вебмастера
-    "~^.*\.?webvork\.com$" 'true';
-    # (прод) Bestcallcentre и поддомены - лк оператора
-    "~^.*\.?bestcallcentre\.info$" 'true';
-    # (стейдж) Webvork и поддомены - лк менеджера и вебмастера
-    "~^.*\.?webvork\.ru$" 'true';
-    # (стейдж) Bestcallcentre и поддомены - лк оператора
-    "~^.*\.?bestcallcentre\.webvork\.ru$" 'true';
-    # (локально) Webvork и поддомены - лк менеджера и вебмастера
-    "~^.*\.?webvork\.test$" 'true';
-    # (локально) Bestcallcentre и поддомены - лк оператора
-    "~^.*\.?bestcallcentre\.test$" 'true';
+    "https://gluck.stoplight.io" 'true';
     # (локально) Кастомные локальные решения на произвольных портах
     "~^.*\.?localhost:?\d*$" 'true';
 }

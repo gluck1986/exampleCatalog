@@ -16,6 +16,7 @@ class Config
         private string $myPort,
         private string $myPass,
         private string $myDbName,
+        private string $specPath,
     ) {
     }
 
@@ -97,5 +98,10 @@ class Config
     public function getSolrCore(): string
     {
         return $this->solrCore;
+    }
+
+    public function getSpecPath()
+    {
+        return $this->specPath;
     }
 }

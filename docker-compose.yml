@@ -29,6 +29,8 @@ services:
     image: solr:8.7.0
     ports:
       - "8981:8983"
+    networks:
+      - default
     volumes:
       - datasolr:/var/solr
       - /var/solr/data/new_core'
@@ -37,12 +39,12 @@ services:
       - gettingstarted
   mysql:
     image: mysql:8.0
-    cap_add:
-      - SYS_NICE
 #    restart: always
     environment:
       - MYSQL_DATABASE=products
       - MYSQL_ROOT_PASSWORD=mysql
+    networks:
+      - default
     ports:
       - '3306:3306'
     volumes:

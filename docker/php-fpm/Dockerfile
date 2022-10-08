@@ -6,4 +6,6 @@ RUN apt-get clean all
 
 COPY app/composer.* /app/
 COPY app/ /app/
+
+EXPOSE 9000
 #RUN composer install

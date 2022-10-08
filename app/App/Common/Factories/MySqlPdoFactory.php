@@ -9,13 +9,14 @@ class MySqlPdoFactory
 {
     public static function buildPdo(Config $config): PDO
     {
+        $dsn = sprintf(
+            'mysql:host=%s;port=%d;dbname=%s',
+            $config->getMyHost(),
+            $config->getMyPort(),
+            $config->getMyDbName(),
+        );
         return new PDO(
-            sprintf(
-                'mysql:host=%s;port=%d;dbname=%s',
-                $config->getMyHost(),
-                $config->getMyPort(),
-                $config->getMyDbName(),
-            ),
+            $dsn,
             $config->getMyUser(),
             $config->getMyPass(),
         );
