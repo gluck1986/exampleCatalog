@@ -115,6 +115,32 @@ paths:
                   - products
                   - filters
                   - summary
+              examples:
+                example-1:
+                  value:
+                    products:
+                      - guid: string
+                        name: string
+                        cost: string
+                        descr: string
+                        attr:
+                          - id: 0
+                            name: string
+                            value: string
+                    filters:
+                      costFrom: 0
+                      costTo: 0
+                      attr:
+                        - id: 0
+                          name: string
+                          values:
+                            - value: string
+                              count: 0
+                    summary:
+                      page: 0
+                      totalPages: 0
+                      totalItems: 0
+                      pageSize: 0
       parameters: []
       requestBody:
         content:
@@ -160,6 +186,22 @@ paths:
               required:
                 - filters
                 - group
+            examples:
+              example-1:
+                value:
+                  filters:
+                    name: string
+                    costFrom: 0
+                    costTo: 100.99
+                    delivery: 0
+                    attr:
+                      - id: 0
+                        values:
+                          - string
+                    group: string
+                  group: string
+                  page: 0
+                  pageSize: 10
         description: ''
   /groups:
     get:
