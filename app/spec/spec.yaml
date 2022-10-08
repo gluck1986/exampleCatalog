@@ -15,7 +15,7 @@ servers:
 paths:
   /catalog:
     post:
-      summary: ''
+      summary: 'get products and filters'
       operationId: post-catalog
       responses:
         '200':
@@ -206,7 +206,7 @@ paths:
       description: get products with filters by filter
   /groups:
     get:
-      summary: Your GET endpoint
+      summary: get groups
       tags: []
       responses:
         '200':
