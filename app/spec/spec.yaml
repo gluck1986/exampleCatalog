@@ -203,6 +203,7 @@ paths:
                   page: 0
                   pageSize: 10
         description: ''
+      description: get products with filters by filter
   /groups:
     get:
       summary: Your GET endpoint
