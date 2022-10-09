@@ -35,7 +35,7 @@ class Config
         return $this->myUser;
     }
 
-    public function getMyPort(): string
+    public function getMyPort(): int
     {
         return $this->myPort;
     }

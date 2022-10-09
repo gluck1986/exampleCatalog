@@ -33,7 +33,6 @@ services:
       - default
     volumes:
       - datasolr:/var/solr
-      - /var/solr/data/new_core'
     command:
       - solr-precreate
       - gettingstarted
@@ -49,7 +48,7 @@ services:
       - '3306:3306'
     volumes:
       - dbmysql:/var/lib/mysql
-#      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./app/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 networks:
   default:
 volumes:
