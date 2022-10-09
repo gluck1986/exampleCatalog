@@ -1,8 +1,13 @@
 <?php
 
 /** @var \App\Common\App $app */
+
+use App\Service\DataGenerator;
+
 $app = require_once __DIR__ . '/App/autoload.php';
-$solr = $app->getSolrClient();
+/** @var DataGenerator $generator */
+$generator = $app->getContainer()->get(DataGenerator::class);
 
-print_r("hello world");
 
+$generator->generate();
+//print_r("hello world");

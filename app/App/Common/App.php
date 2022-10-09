@@ -6,65 +6,52 @@ use App\Common\Config\Config;
 use App\Common\Factories\MySqlPdoFactory;
 use App\Common\Factories\RouterFactory;
 use App\Common\Factories\SolrClientFactory;
+use App\Repository\Mappers\ProductSolrMapper;
+use App\Repository\ProductRepository;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
+use Laminas\ServiceManager\AbstractFactory\ReflectionBasedAbstractFactory;
+use Laminas\ServiceManager\ServiceManager;
 use League\Route\Router;
 use PDO;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Solarium\Client;
 
 class App
 {
-    private Config $config;
-    private Router $router;
-    private ServerRequestInterface $request;
-    private Client $solrClient;
-    private PDO $pdo;
+    private readonly Router $router;
+    private readonly ContainerInterface $container;
 
-    public function __construct(Config $config, ServerRequestInterface $request)
+    public function __construct(Config $config, private readonly ServerRequestInterface $request)
     {
-        $this->config = $config;
-        $this->request = $request;
-        $this->solrClient = (new SolrClientFactory())->factory($config);
-        $this->pdo = MySqlPdoFactory::buildPdo($config);
+        $cli = (new SolrClientFactory())->factory($config);
+        $this->container = new ServiceManager([
+            'services' => [
+                Config::class => $config,
+                Client::class =>  $cli,
+                PDO::class =>  MySqlPdoFactory::buildPdo($config),
+            ],
+            'abstract_factories' => [
+                ReflectionBasedAbstractFactory::class,
+            ],
+        ]);
+
         $this->router = RouterFactory::buildRouter($this);
     }
 
-    /**
-     * @return Config
-     */
-    public function getConfig(): Config
+    public function getContainer(): ContainerInterface
     {
-        return $this->config;
+        return $this->container;
     }
 
-
-    /**
-     * @return ServerRequestInterface
-     */
     public function getRequest(): ServerRequestInterface
     {
         return $this->request;
     }
 
-    public function run()
+    public function run(): void
     {
         $response = $this->router->dispatch($this->request);
         (new SapiEmitter())->emit($response);
-    }
-
-    /**
-     * @return Client
-     */
-    public function getSolrClient(): Client
-    {
-        return $this->solrClient;
-    }
-
-    /**
-     * @return PDO
-     */
-    public function getPdo(): PDO
-    {
-        return $this->pdo;
     }
 }

@@ -8,7 +8,7 @@ use Dotenv\Dotenv;
 
 class ConfigFactory
 {
-    public static function build($basePath): Config
+    public static function make(string $basePath): Config
     {
         if (file_exists($basePath . '/.env')) {
             $dotenv = Dotenv::createImmutable($basePath);
@@ -17,16 +17,21 @@ class ConfigFactory
 
         return new Config(
             basePath: $basePath,
-            solrHost: getenv('solr_host') ?? 'localhost',
+            solrHost: self::getEnvStr('solr_host', 'localhost'),
             solrPort: empty(getenv('solr_port')) ? 8983 : (int)getenv('solr_port'),
-            solrPath: getenv('solr_path') ?? '/',
-            solrCore: getenv('solr_core') ?? '',
-            myHost:getenv('mysql_host') ?? 'localhost',
-            myUser:getenv('mysql_user') ?? '',
+            solrPath: self::getEnvStr('solr_path', '/'),
+            solrCore: self::getEnvStr('solr_core'),
+            myHost: self::getEnvStr('mysql_host', 'localhost'),
+            myUser: self::getEnvStr('mysql_user'),
             myPort: empty(getenv('mysql_port')) ? 3306 : (int)getenv('mysql_port'),
-            myPass:getenv('mysql_pass') ?? '',
-            myDbName:getenv('mysql_db') ?? '',
+            myPass: self::getEnvStr('mysql_pass'),
+            myDbName: self::getEnvStr('mysql_db'),
             specPath: dirname(__DIR__, 3) . '/spec/spec.yaml',
         );
+    }
+
+    private static function getEnvStr(string $key, string $default = ''): string
+    {
+        return empty(getenv($key)) ? $default : (string)getenv($key);
     }
 }

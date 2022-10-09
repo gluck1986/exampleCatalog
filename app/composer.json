@@ -24,7 +24,9 @@
     "symfony/http-client": "6.2.x-dev",
     "symfony/event-dispatcher": "6.2.x-dev",
     "httpsoft/http-response": "dev-master",
-    "league/openapi-psr7-validator": "dev-master"
+    "league/openapi-psr7-validator": "dev-master",
+    "ramsey/uuid": "5.x-dev",
+    "fakerphp/faker": "*"
   },
   "autoload": {
     "psr-4": {

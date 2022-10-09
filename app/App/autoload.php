@@ -3,11 +3,12 @@
 use App\Common\App;
 use App\Common\Factories\ConfigFactory;
 
-$basePath = $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__);
+$basePath = dirname(__DIR__);
 
-require_once dirname(__DIR__) . "/vendor/autoload.php";
+/** @psalm-suppress UnresolvableInclude */
+require_once $basePath . '/vendor/autoload.php';
 
-$config = ConfigFactory::build($basePath);
+$config = ConfigFactory::make($basePath);
 $request = Laminas\Diactoros\ServerRequestFactory::fromGlobals(
     $_SERVER,
     $_GET,
