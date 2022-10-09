@@ -150,8 +150,6 @@ paths:
               properties:
                 filters:
                   type: object
-                  required:
-                    - group
                   properties:
                     name:
                       type: string
@@ -175,10 +173,8 @@ paths:
                         required:
                           - id
                           - values
-                    group:
-                      type: string
                 group:
-                  type: string
+                  type: integer
                 page:
                   type: integer
                 pageSize:
