@@ -121,8 +121,9 @@ paths:
                     products:
                       - guid: string
                         name: string
-                        cost: string
+                        cost: 0
                         descr: string
+                        delivery: 0
                         attr:
                           - id: 0
                             name: string
@@ -130,12 +131,13 @@ paths:
                     filters:
                       costFrom: 0
                       costTo: 0
+                      delivery:
+                        - 0
                       attr:
                         - id: 0
                           name: string
                           values:
-                            - value: string
-                              count: 0
+                            - string
                     summary:
                       page: 0
                       totalPages: 0
@@ -188,14 +190,13 @@ paths:
                   filters:
                     name: string
                     costFrom: 0
-                    costTo: 100.99
+                    costTo: 0
                     delivery: 0
                     attr:
-                      - id: 0
+                      - id: 1
                         values:
                           - string
-                    group: string
-                  group: string
+                  group: 1
                   page: 0
                   pageSize: 10
         description: ''
