@@ -103,7 +103,7 @@ class CatalogFilterResultMapper
             $result[] = new FilterAttributeDto(
                 id: $attributeEntity->getId(),
                 name: $attributeEntity->getName(),
-                values: array_keys(array_filter($facet->getValues())),
+                values: array_map(fn($key) => (string)$key, array_keys(array_filter($facet->getValues()))),
             );
         }
         return $result;

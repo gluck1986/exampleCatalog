@@ -21,7 +21,7 @@ class CatalogInputMapper
             costTo: $this->getFloatValue($this->getArrayValue($parsedBody, 'filters'), 'costTo'),
             delivery: $this->getIntValue($this->getArrayValue($parsedBody, 'filters'), 'delivery'),
             page: $this->getIntValue($parsedBody, 'page', 1),
-            pageSize: $this->getIntValue($parsedBody, 'page', 10),
+            pageSize: $this->getIntValue($parsedBody, 'pageSize', 10),
             attributes: array_map(
                 fn($arr) => $this->mapAttribute($arr),
                 $this->getArrayValue($this->getArrayValue($parsedBody, 'filters'), 'attr')
