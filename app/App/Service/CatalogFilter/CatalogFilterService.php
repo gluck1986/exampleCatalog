@@ -4,7 +4,9 @@ namespace App\Service\CatalogFilter;
 
 use App\Entity\Attribute;
 use App\Repository\GroupToAttributeRepository;
+use App\Service\CatalogFilter\Dto\CatalogWithFilterDto;
 use App\Service\CatalogFilter\Dto\CriteriaDto;
+use App\Service\CatalogFilter\Mapper\CatalogFilterResultMapper;
 use Exception;
 use Solarium\Client;
 use Solarium\Component\FacetSet;
@@ -12,7 +14,7 @@ use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Query\Query;
 use Solarium\QueryType\Select\Result\Result;
 
-class CatalogFilter
+class CatalogFilterService
 {
     /**
      * @var list<Attribute>
@@ -21,6 +23,7 @@ class CatalogFilter
 
     public function __construct(
         private readonly GroupToAttributeRepository $groupToAttributeRepository,
+        private readonly CatalogFilterResultMapper $catalogFilterResultMapper,
         private readonly Client $client,
     ) {
     }
@@ -28,13 +31,13 @@ class CatalogFilter
     /**
      * @throws Exception
      */
-    public function getProductAndFilters(CriteriaDto $criteria): object
+    public function getProductAndFilters(CriteriaDto $criteria): CatalogWithFilterDto
     {
         $this->attributes = $this->groupToAttributeRepository->getAttributesByGroup($criteria->group);
         $attrIdToFieldMap = $this->getAttrIdToFieldMap();
         $rawResult = $this->getProductAndFiltersRaw($attrIdToFieldMap, $criteria);
 
-        return $this->mapResult($rawResult);
+        return $this->mapResult($rawResult, $criteria);
     }
 
     /**
@@ -92,7 +95,7 @@ class CatalogFilter
     /**
      * @param array<int, list<string>> $attrIdToCriteriaValuesMap
      */
-    public function hasNotEmptyValues(array $attrIdToCriteriaValuesMap, int $attrId): bool
+    private function hasNotEmptyValues(array $attrIdToCriteriaValuesMap, int $attrId): bool
     {
         return !empty($attrIdToCriteriaValuesMap[$attrId])
             && count($attrIdToCriteriaValuesMap[$attrId]) > 0;
@@ -101,7 +104,7 @@ class CatalogFilter
     /**
      * @return array<int, list<string>>
      */
-    public function getAttrIdToCriteriaValuesMap(CriteriaDto $criteria): array
+    private function getAttrIdToCriteriaValuesMap(CriteriaDto $criteria): array
     {
         $result = [];
         foreach ($criteria->attributes as $attr) {
@@ -110,7 +113,7 @@ class CatalogFilter
         return $result;
     }
 
-    public function queryDelivery(CriteriaDto $criteria, Query $query, FacetSet $facetSet): void
+    private function queryDelivery(CriteriaDto $criteria, Query $query, FacetSet $facetSet): void
     {
         if (null !== $criteria->delivery) {
             $query->createFilterQuery('delivery_i')
@@ -127,7 +130,7 @@ class CatalogFilter
         }
     }
 
-    public function costQuery(CriteriaDto $criteria, Query $query): void
+    private function costQuery(CriteriaDto $criteria, Query $query): void
     {
         if (null !== $criteria->costFrom || null !== $criteria->costTo) {
             $query->createFilterQuery('cost_d')
@@ -148,7 +151,7 @@ class CatalogFilter
      * @param array<int, string> $attrIdToFieldMap
      * @param array<int, list<string>> $attrIdToCriteriaValuesMap
      */
-    public function attributesQuery(
+    private function attributesQuery(
         array    $attrIdToFieldMap,
         array    $attrIdToCriteriaValuesMap,
         Query    $query,
@@ -177,12 +180,8 @@ class CatalogFilter
         }
     }
 
-    private function parseFieldToAttribute(string $field): ?int
+    private function mapResult(Result|ResultInterface $rawResult, CriteriaDto $criteriaDto): CatalogWithFilterDto
     {
-        $match=[];
-        if (preg_match('/attr_([\d]{1,})_s/', $field, $match) === 1) {
-            return empty($match[1]) ? null : (int)$match[1];
-        }
-        return null;
+        return $this->catalogFilterResultMapper->mapResult($rawResult, $this->attributes, $criteriaDto);
     }
 }
