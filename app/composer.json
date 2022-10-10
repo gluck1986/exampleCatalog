@@ -46,7 +46,8 @@
   "require-dev": {
     "squizlabs/php_codesniffer": "^3.0@dev",
     "heroku/heroku-buildpack-php": "dev-main",
+    "rector/rector": "0.14.x-dev",
     "vimeo/psalm": "5.x-dev",
-    "rector/rector": "0.14.x-dev"
+    "php-standard-library/psalm-plugin": "dev-main"
   }
 }

@@ -4,12 +4,15 @@ namespace App\Service;
 
 use App\Entity\Attribute;
 use App\Entity\Group;
+use App\Entity\GroupToAttribute;
 use App\Entity\Product;
 use App\Repository\AttributesRepository;
 use App\Repository\GroupRepository;
+use App\Repository\GroupToAttributeRepository;
 use App\Repository\ProductRepository;
 use App\Service\Dto\AttributeDto;
 use App\Service\Dto\GroupWithAttributesDto;
+use Exception;
 use Faker\Factory;
 use Faker\Generator;
 use Ramsey\Uuid\Uuid as UuidBuilder;
@@ -19,11 +22,11 @@ class DataGenerator
     /** @description цена товара min */
     private const COST_MIN = 1.0;
     /** @description цена товара max */
-    private const COST_MAX = 99999.0;
+    private const COST_MAX = 99_999.0;
     /** @description товаров в группе min */
     private const GROUP_MIN_CAPACITY = 999;
     /** @description товаров в группе max */
-    private const GROUP_MAX_CAPACITY = 9_999_999;
+    private const GROUP_MAX_CAPACITY = 999_999;
     /** @description атрибутов у товара min */
     private const ATTR_IN_USE_MIN = 5;
     /** @description атрибутов у товара max */
@@ -31,13 +34,13 @@ class DataGenerator
     /** @description разных значений одного атрибута min */
     private const ATTR_VALUES_MIN_CAPACITY = 50;
     /** @description разных значений одного атрибута max */
-    private const ATTR_VALUES_MAX_CAPACITY = 1000;
+    private const ATTR_VALUES_MAX_CAPACITY = 100;
     /** @description разных атрибутов в группу min */
     private const ATTR_CAPACITY_MIN = 20;
     /** @description разных атрибутов в группу max */
     private const ATTR_CAPACITY_MAX = 35;
     /** @description писать товаров за раз */
-    private const CHUNK_SIZE = 1000;
+    private const CHUNK_SIZE = 5000;
 
     private const DELIVERY_VALUES = [1, 2, 3, 4, 5];
 
@@ -51,7 +54,8 @@ class DataGenerator
     public function __construct(
         private readonly ProductRepository $productRepository,
         private readonly AttributesRepository $attributesRepository,
-        private readonly GroupRepository $groupRepository
+        private readonly GroupRepository $groupRepository,
+        private readonly GroupToAttributeRepository $groupToAttributeRepository,
     ) {
         $this->faker = Factory::create();
     }
@@ -59,11 +63,20 @@ class DataGenerator
     public function generate(): void
     {
         $groups = $this->createGroups();
-        $this->commonAttributes = $this->createCommonAttributes();
+        $commonAttributes = $this->createCommonAttributes();
+        foreach ($groups as $group) {
+            $this->linkGroupToAttributes($group, $commonAttributes);
+        }
+        $commonAttributesWithValues = $this->makeValuesCommonAttributes($commonAttributes);
         foreach ($groups as $group) {
             $attributes = $this->createAttributes();
-            $groupWithAttributes = $this->mapGroupAttribute($group, $attributes);
-            $this->generateProducts($groupWithAttributes);
+            $this->linkGroupToAttributes($group, $attributes);
+            $groupWithAttributesWithValues = $this->makeValuesAttributes(
+                $group,
+                $attributes,
+                $commonAttributesWithValues
+            );
+            $this->generateProducts($groupWithAttributesWithValues);
         }
     }
 
@@ -129,31 +142,42 @@ class DataGenerator
         return $this->attributesRepository->insertMany($attr);
     }
 
+
+    /**
+     * @param list<Attribute> $commonAttributes
+     * @return array<int, AttributeDto>
+     * @throws Exception
+     */
+    private function makeValuesCommonAttributes(array $commonAttributes): array
+    {
+        $result = [];
+        foreach ($commonAttributes as $attr) {
+            $attrId = $attr->getId() ?? throw new Exception('attribute id must to be');
+            $result[$attrId] =
+                new AttributeDto(
+                    id: $attrId,
+                    name: $attr->getName(),
+                    values: $this->generateValuesByGenerator(
+                        $this->getDefaultCommonAttributes()[$attr->getName()]
+                        ?? throw new Exception('unexpected no callable generator')
+                    ),
+                );
+        }
+        return $result;
+    }
+
     /**
      * @param list<Attribute> $attributes
-     * @throws \Exception
+     * @param array<int, AttributeDto> $commonAttributes
+     *
+     * @throws Exception
      */
-    private function mapGroupAttribute(Group $group, array $attributes): GroupWithAttributesDto
-    {
-        $commonResult = array_reduce(
-            $this->commonAttributes,
-            function (array $acc, Attribute $attr): array {
-                $attrId = $attr->getId() ?? throw new \Exception('attribute id must to be');
-                $acc[$attrId] =
-                    new AttributeDto(
-                        id: $attrId,
-                        name: $attr->getName(),
-                        values: $this->generateValuesByGenerator(
-                            $this->getDefaultCommonAttributes()[$attr->getName()]
-                            ?? throw new \Exception('unexpected no callable generator')
-                        ),
-                    );
-                return $acc;
-            },
-            []
-        );
-        /** @var array<int, AttributeDto> $commonResult */
-        $groupId = $group->getId() ?? throw  new \Exception('group id must be');
+    private function makeValuesAttributes(
+        Group $group,
+        array $attributes,
+        array $commonAttributes
+    ): GroupWithAttributesDto {
+        $groupId = $group->getId() ?? throw  new Exception('group id must be');
         /** @psalm-suppress MixedArgumentTypeCoercion */
         return new GroupWithAttributesDto(
             id: $groupId,
@@ -161,7 +185,7 @@ class DataGenerator
             attributes: array_reduce(
                 $attributes,
                 function (array $acc, Attribute $attr): array {
-                    $attrId = $attr->getId() ?? throw new \Exception('attribute id must to be');
+                    $attrId = $attr->getId() ?? throw new Exception('attribute id must to be');
                     $acc[$attrId] = new AttributeDto(
                         id: $attrId,
                         name: $attr->getName(),
@@ -169,7 +193,7 @@ class DataGenerator
                     );
                     return $acc;
                 },
-                $commonResult
+                $commonAttributes
             ),
         );
     }
@@ -177,7 +201,7 @@ class DataGenerator
     /**
      * @param Closure(Generator):string $generator
      * @return list<string>
-     * @throws \Exception
+     * @throws Exception
      */
     private function generateValuesByGenerator(\Closure $generator): array
     {
@@ -192,7 +216,7 @@ class DataGenerator
 
     /**
      * @return list<string>
-     * @throws \Exception
+     * @throws Exception
      */
     private function generateValues(): array
     {
@@ -215,7 +239,7 @@ class DataGenerator
 
     /**
      * @return list<Attribute>
-     * @throws \Exception
+     * @throws Exception
      */
     private function createAttributes(): array
     {
@@ -229,7 +253,7 @@ class DataGenerator
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function generateProducts(GroupWithAttributesDto $groupWithAttributes): void
     {
@@ -261,15 +285,15 @@ class DataGenerator
 
     /**
      * @return list<Attribute>
-     * @throws \Exception
+     * @throws Exception
      */
     private function attributesFromExists(GroupWithAttributesDto $groupWithAttributes): array
     {
         $result = [];
         foreach ($this->commonAttributes as $attribute) {
-            $attrId = $attribute->getId() ?? throw new \Exception('attribute id must to be');
+            $attrId = $attribute->getId() ?? throw new Exception('attribute id must to be');
             $attrDto = $groupWithAttributes->attributes[$attrId]
-                ?? throw new \Exception('unexpected attribute no find in group');
+                ?? throw new Exception('unexpected attribute no find in group');
             $result[$attrDto->id] = new Attribute(
                 id: $attrDto->id,
                 name: $attrDto->name,
@@ -289,5 +313,18 @@ class DataGenerator
         }
 
         return array_values($result);
+    }
+
+    /**
+     * @param list<Attribute> $attributes
+     * @throws Exception
+     */
+    private function linkGroupToAttributes(Group $group, array $attributes): void
+    {
+        foreach ($attributes as $attribute) {
+            $attrId = $attribute->getId() ?? throw new Exception('attribute id must to be');
+            $groupId = $group->getId() ?? throw new Exception('attribute id must to be');
+            $this->groupToAttributeRepository->insert(new GroupToAttribute($groupId, $attrId));
+        }
     }
 }

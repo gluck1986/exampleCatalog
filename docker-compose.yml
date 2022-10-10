@@ -26,6 +26,8 @@ services:
     networks:
       - default
   solr:
+    environment:
+      - SOLR_HEAP=2G
     image: solr:8.7.0
     ports:
       - "8981:8983"
