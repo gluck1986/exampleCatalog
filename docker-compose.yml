@@ -16,15 +16,18 @@ services:
     working_dir: /app
     networks:
       - default
+    restart: always
   nginx:
     build: ./docker/nginx
     depends_on:
       - php
-#    restart: always
+    restart: always
     environment:
       FASTCGI_PASS: php:9000
     networks:
       - default
+  ports:
+    - 80:80
   solr:
     environment:
       - SOLR_HEAP=2G
@@ -38,6 +41,7 @@ services:
     command:
       - solr-precreate
       - gettingstarted
+    restart: always
   mysql:
     image: mysql:8.0
 #    restart: always
@@ -46,11 +50,10 @@ services:
       - MYSQL_ROOT_PASSWORD=mysql
     networks:
       - default
-    ports:
-      - '3306:3306'
     volumes:
       - dbmysql:/var/lib/mysql
       - ./app/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
 networks:
   default:
 volumes:
