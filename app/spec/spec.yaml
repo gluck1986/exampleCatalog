@@ -38,6 +38,8 @@ paths:
                           type: number
                         descr:
                           type: string
+                        delivery:
+                          type: integer
                         attr:
                           type: array
                           items:
@@ -58,18 +60,22 @@ paths:
                         - name
                         - cost
                         - descr
+                        - delivery
                         - attr
                   filters:
                     type: object
                     required:
                       - costFrom
                       - costTo
+                      - delivery
                       - attr
                     properties:
                       costFrom:
                         type: number
                       costTo:
                         type: number
+                      delivery:
+                        type: integer
                       attr:
                         type: array
                         items:
@@ -82,15 +88,7 @@ paths:
                             values:
                               type: array
                               items:
-                                type: object
-                                properties:
-                                  value:
-                                    type: string
-                                  count:
-                                    type: integer
-                                required:
-                                  - value
-                                  - count
+                                type: string
                           required:
                             - id
                             - name
