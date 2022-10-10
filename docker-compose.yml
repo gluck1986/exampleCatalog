@@ -26,8 +26,8 @@ services:
       FASTCGI_PASS: php:9000
     networks:
       - default
-  ports:
-    - 80:80
+    ports:
+      - "80:80"
   solr:
     environment:
       - SOLR_HEAP=2G
