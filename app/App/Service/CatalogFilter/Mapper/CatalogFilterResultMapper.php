@@ -60,7 +60,7 @@ class CatalogFilterResultMapper
         $statsResult = $rawResult->getStats();
         $statsItem = $statsResult->getResult('cost_d');
 
-        return [$statsItem->getMin(), $statsItem->getMax()];
+        return [(float)$statsItem->getMin(), (float)$statsItem->getMax()];
     }
 
     /**

@@ -16,15 +16,20 @@ class CatalogInputMapper
 
         return new CriteriaDto(
             group: $this->getIntValueOrFall($parsedBody, 'group'),
-            name: $this->getStringValue($parsedBody, 'name'),
-            costFrom: $this->getFloatValue($parsedBody, 'costFrom'),
-            costTo: $this->getFloatValue($parsedBody, 'costTo'),
-            delivery: $this->getIntValue($parsedBody, 'delivery'),
+            name: $this->getStringValue($this->getArrayValue($parsedBody, 'filters'), 'name'),
+            costFrom: $this->getFloatValue($this->getArrayValue($parsedBody, 'filters'), 'costFrom'),
+            costTo: $this->getFloatValue($this->getArrayValue($parsedBody, 'filters'), 'costTo'),
+            delivery: $this->getIntValue($this->getArrayValue($parsedBody, 'filters'), 'delivery'),
             page: $this->getIntValue($parsedBody, 'page', 1),
             pageSize: $this->getIntValue($parsedBody, 'page', 10),
-            attributes: array_map(fn($arr) => $this->mapAttribute($arr), $this->getArrayValue($parsedBody, 'attr')),
+            attributes: array_map(
+                fn($arr) => $this->mapAttribute($arr),
+                $this->getArrayValue($this->getArrayValue($parsedBody, 'filters'), 'attr')
+            ),
         );
     }
+
+
 
     private function mapAttribute($arr): CriteriaAttributeDto
     {
