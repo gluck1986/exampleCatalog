@@ -75,7 +75,9 @@ paths:
                       costTo:
                         type: number
                       delivery:
-                        type: integer
+                        type: array
+                        items:
+                          type: integer
                       attr:
                         type: array
                         items:
