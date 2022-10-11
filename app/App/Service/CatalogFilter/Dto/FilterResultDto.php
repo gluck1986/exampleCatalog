@@ -5,9 +5,6 @@ namespace App\Service\CatalogFilter\Dto;
 class FilterResultDto
 {
     /**
-     * @param float $costFrom
-     * @param float $costTo
-     * @param array $delivery
      * @param list<FilterAttributeDto> $attributes
      */
     public function __construct(
@@ -15,8 +12,7 @@ class FilterResultDto
         public readonly float $costTo,
         public readonly array $delivery,
         public readonly array $attributes,
-    )
-    {
+    ) {
     }
 
     public function toArray(): array

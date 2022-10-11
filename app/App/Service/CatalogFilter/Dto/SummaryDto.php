@@ -9,8 +9,7 @@ class SummaryDto
         public readonly int $totalPages,
         public readonly int $totalItems,
         public readonly int $pageSize,
-    )
-    {
+    ) {
     }
 
     public function toArray(): array

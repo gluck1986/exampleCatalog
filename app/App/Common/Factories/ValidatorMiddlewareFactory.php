@@ -3,9 +3,7 @@
 namespace App\Common\Factories;
 
 use App\Common\Config\Config;
-use League\OpenAPIValidation\PSR15\ValidationMiddleware;
 use League\OpenAPIValidation\PSR15\ValidationMiddlewareBuilder;
-use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Psr\Http\Server\MiddlewareInterface;
 
 class ValidatorMiddlewareFactory

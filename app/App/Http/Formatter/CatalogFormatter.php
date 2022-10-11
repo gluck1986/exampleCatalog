@@ -14,7 +14,7 @@ class CatalogFormatter
     public function format(CatalogWithFilterDto $dto): array
     {
         return [
-            'products' => array_map([$this->productMapper, 'toArray'], $dto->products),
+            'products' => array_map($this->productMapper->toArray(...), $dto->products),
             'filters' => $dto->filter->toArray(),
             'summary' => $dto->summary->toArray(),
         ];

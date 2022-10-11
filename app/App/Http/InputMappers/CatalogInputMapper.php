@@ -20,18 +20,18 @@ class CatalogInputMapper
             costFrom: $this->getFloatValue($this->getArrayValue($parsedBody, 'filters'), 'costFrom'),
             costTo: $this->getFloatValue($this->getArrayValue($parsedBody, 'filters'), 'costTo'),
             delivery: $this->getIntValue($this->getArrayValue($parsedBody, 'filters'), 'delivery'),
-            page: $this->getIntValue($parsedBody, 'page', 1),
-            pageSize: $this->getIntValue($parsedBody, 'pageSize', 10),
-            attributes: array_map(
-                fn($arr) => $this->mapAttribute($arr),
+            page: $this->getIntValue($parsedBody, 'page') ?? 1,
+            pageSize: $this->getIntValue($parsedBody, 'pageSize') ?? 10,
+            attributes: array_values(array_map(
+                fn(array $arr) => $this->mapAttribute($arr),
                 $this->getArrayValue($this->getArrayValue($parsedBody, 'filters'), 'attr')
-            ),
+            )),
         );
     }
 
 
 
-    private function mapAttribute($arr): CriteriaAttributeDto
+    private function mapAttribute(array $arr): CriteriaAttributeDto
     {
         return new CriteriaAttributeDto(
             id: $this->getIntValueOrFall($arr, 'id'),
@@ -41,6 +41,7 @@ class CatalogInputMapper
 
     private function getIntValueOrFall(array $fields, string $key): int
     {
+        /** @psalm-suppress MixedAssignment */
         $value = $fields[$key] ?? throw new Exception("value by `$key` must be");
 
         return (int)$value;

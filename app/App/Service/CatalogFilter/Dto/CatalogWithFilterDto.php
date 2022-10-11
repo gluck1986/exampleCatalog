@@ -13,7 +13,6 @@ class CatalogWithFilterDto
         public readonly array $products,
         public readonly FilterResultDto $filter,
         public readonly SummaryDto $summary,
-    )
-    {
+    ) {
     }
 }

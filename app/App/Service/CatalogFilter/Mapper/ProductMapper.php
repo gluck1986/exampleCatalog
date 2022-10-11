@@ -15,7 +15,7 @@ class ProductMapper
             'cost' => $product->getCost(),
             'descr' => $product->getDescr(),
             'delivery' => $product->getDelivery(),
-            'attr' => array_map([$this, 'attributeToArray'], $product->getAttr())
+            'attr' => array_map($this->attributeToArray(...), $product->getAttr())
         ];
     }
 

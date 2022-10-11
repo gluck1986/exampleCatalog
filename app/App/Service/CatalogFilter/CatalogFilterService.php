@@ -55,9 +55,9 @@ class CatalogFilterService
     }
 
     /**
+     * @psalm-suppress MoreSpecificReturnType
      * @param array<int, string> $attrIdToFieldMap
-     * @psalm-return ResultInterface
-     * @return ResultInterface|Result
+     * @psalm-return Result&ResultInterface
      */
     private function getProductAndFiltersRaw(array $attrIdToFieldMap, CriteriaDto $criteria): ResultInterface
     {
@@ -79,6 +79,7 @@ class CatalogFilterService
         $query->setRows($criteria->pageSize);
         $query->setStart($criteria->pageSize * ($criteria->page - 1));
 
+        /** @psalm-suppress LessSpecificReturnStatement*/
         return $client->execute($query);
     }
 
@@ -180,6 +181,13 @@ class CatalogFilterService
         }
     }
 
+    /**
+     * @psalm-param Result&ResultInterface $rawResult
+     * @param Result|ResultInterface $rawResult
+     * @param CriteriaDto $criteriaDto
+     * @return CatalogWithFilterDto
+     * @throws Exception
+     */
     private function mapResult(Result|ResultInterface $rawResult, CriteriaDto $criteriaDto): CatalogWithFilterDto
     {
         return $this->catalogFilterResultMapper->mapResult($rawResult, $this->attributes, $criteriaDto);

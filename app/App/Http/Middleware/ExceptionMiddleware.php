@@ -14,8 +14,8 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 final class ExceptionMiddleware implements MiddlewareInterface
 {
-    public function __construct(
-    ) {
+    public function __construct()
+    {
     }
 
     public function process(
@@ -27,14 +27,12 @@ final class ExceptionMiddleware implements MiddlewareInterface
         } catch (InvalidServerRequestMessage $e) {
             $result = $this->getValidationMessage($e);
 
-            return new JsonResponse($result,400);
+            return new JsonResponse($result, 400);
         }
     }
 
     /**
      * @param \Exception|InvalidServerRequestMessage $e
-     *
-     * @return string
      */
     private function getValidationMessage(\Exception|InvalidServerRequestMessage $e): string
     {
@@ -54,6 +52,7 @@ final class ExceptionMiddleware implements MiddlewareInterface
                 $reason = $prev->getMessage();
                 $result .= '; ' . $reason;
             } else {
+                /** @psalm-suppress MixedArgumentTypeCoercion */
                 $field = implode('.', $dataBreadCrumb->buildChain());
                 $reason = $prev->getMessage();
                 $result .= '; Field: ' . $field;

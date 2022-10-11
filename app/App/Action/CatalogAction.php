@@ -23,7 +23,7 @@ class CatalogAction
      */
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $criteria = $this->inputMapper->map($request->getParsedBody());
+        $criteria = $this->inputMapper->map((array)$request->getParsedBody());
         $resultDto = $this->service->getProductAndFilters($criteria);
         $data = $this->formatter->format($resultDto);
 

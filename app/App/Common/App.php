@@ -6,8 +6,6 @@ use App\Common\Config\Config;
 use App\Common\Factories\MySqlPdoFactory;
 use App\Common\Factories\RouterFactory;
 use App\Common\Factories\SolrClientFactory;
-use App\Repository\Mappers\ProductSolrMapper;
-use App\Repository\ProductRepository;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use Laminas\ServiceManager\AbstractFactory\ReflectionBasedAbstractFactory;
 use Laminas\ServiceManager\ServiceManager;

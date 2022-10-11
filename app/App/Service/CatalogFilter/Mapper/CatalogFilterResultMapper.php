@@ -9,9 +9,10 @@ use App\Service\CatalogFilter\Dto\CriteriaDto;
 use App\Service\CatalogFilter\Dto\FilterAttributeDto;
 use App\Service\CatalogFilter\Dto\FilterResultDto;
 use App\Service\CatalogFilter\Dto\SummaryDto;
-use App\Service\Dto\AttributeDto;
 use Exception;
 use Solarium\Component\Result\Facet\Field;
+use Solarium\Component\Result\Stats\Stats;
+use Solarium\Core\Query\DocumentInterface;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Result\Document;
 use Solarium\QueryType\Select\Result\Result;
@@ -19,13 +20,16 @@ use Solarium\QueryType\Select\Result\Result;
 class CatalogFilterResultMapper
 {
     /**
+     * @psalm-param Result&ResultInterface $rawResult
      * @param Result|ResultInterface $rawResult
      * @param list<Attribute> $knowAttributes
-     * @return CatalogWithFilterDto
      * @throws Exception
      */
-    public function mapResult(Result|ResultInterface $rawResult, array $knowAttributes, CriteriaDto $criteriaDto): CatalogWithFilterDto
-    {
+    public function mapResult(
+        Result|ResultInterface $rawResult,
+        array $knowAttributes,
+        CriteriaDto $criteriaDto
+    ): CatalogWithFilterDto {
         $attributesMap = $this->attributesIndexById($knowAttributes);
         [$min, $max] = $this->mapCost($rawResult);
         $delivery = $this->mapDelivery($rawResult);
@@ -38,12 +42,16 @@ class CatalogFilterResultMapper
             attributes: $attributes,
         );
 
-        $totalPages = $criteriaDto->pageSize === 0 ? 0: (int)ceil($rawResult->getNumFound() / $criteriaDto->pageSize);
+        if ($criteriaDto->pageSize === 0) {
+            $totalPages = 0;
+        } else {
+            $totalPages = (int)ceil($rawResult->getNumFound() ?? 0 / $criteriaDto->pageSize);
+        }
 
         $summary = new SummaryDto(
             page: $criteriaDto->page,
             totalPages: $totalPages,
-            totalItems: $rawResult->getNumFound(),
+            totalItems: $rawResult->getNumFound() ?? 0,
             pageSize: $criteriaDto->pageSize,
         );
         $products = $this->mapProducts($rawResult, $attributesMap);
@@ -55,23 +63,34 @@ class CatalogFilterResultMapper
         );
     }
 
+    /**
+     * @psalm-param Result&ResultInterface $rawResult
+     * @return float[]
+     */
     private function mapCost(Result|ResultInterface $rawResult): array
     {
         $statsResult = $rawResult->getStats();
-        $statsItem = $statsResult->getResult('cost_d');
+        $statsItem = $statsResult?->getResult('cost_d');
 
-        return [(float)$statsItem->getMin(), (float)$statsItem->getMax()];
+        return [(float)$statsItem?->getMin(), (float)$statsItem?->getMax()];
     }
 
     /**
-     * @param Result|ResultInterface $rawResult
+     * @psalm-param Result&ResultInterface $rawResult
      * @return list<int>
      */
     private function mapDelivery(Result|ResultInterface $rawResult): array
     {
         $result = [];
-        $facet = $rawResult->getFacetSet();
-        foreach ($facet->getFacet('delivery_i') as $value => $count) {
+        $facetSet = $rawResult->getFacetSet();
+        if (null === $facetSet) {
+            return [];
+        }
+        /** @var Field|null $facet */
+        $facet = $facetSet->getFacet('delivery_i');
+        $facetValues = $facet?->getValues() ?? [];
+        /** @psalm-suppress MixedAssignment */
+        foreach ($facetValues as $value => $count) {
             if ($count > 0) {
                 $result[] = (int)$value;
             }
@@ -80,19 +99,20 @@ class CatalogFilterResultMapper
     }
 
     /**
-     * @param Result|ResultInterface $rawResult
+     * @psalm-param Result&ResultInterface $rawResult
      * @param array<int, Attribute> $attributesMap
      * @return list<FilterAttributeDto>
      */
     private function mapAttributes(Result|ResultInterface $rawResult, array $attributesMap): array
     {
         $result = [];
-        $facets = $rawResult->getFacetSet()->getFacets();
+        /** @var Field[]|array $facets */
+        $facets = $rawResult->getFacetSet()?->getFacets() ?? [];
         foreach ($facets as $name => $facet) {
             if (!$facet instanceof Field) {
                 continue;
             }
-            $id = $this->parseFieldToAttributeId($name);
+            $id = $this->parseFieldToAttributeId((string)$name);
             if (null === $id) {
                 continue;
             }
@@ -101,7 +121,7 @@ class CatalogFilterResultMapper
                 continue;
             }
             $result[] = new FilterAttributeDto(
-                id: $attributeEntity->getId(),
+                id: $attributeEntity->getId() ?? throw new Exception("unexpected null attribute id"),
                 name: $attributeEntity->getName(),
                 values: array_map(fn($key) => (string)$key, array_keys(array_filter($facet->getValues()))),
             );
@@ -126,13 +146,14 @@ class CatalogFilterResultMapper
     {
         $result = [];
         foreach ($attributes as $attribute) {
-            $result[$attribute->getId()] = $attribute;
+            $attrId = $attribute->getId() ?? throw new Exception("unexpected null attribute id");
+            $result[$attrId] = $attribute;
         }
         return $result;
     }
 
     /**
-     * @param Result|ResultInterface $rawResult
+     * @psalm-param Result&ResultInterface $rawResult
      * @param array<int, Attribute> $attributesMap
      * @return list<Product>
      * @throws Exception
@@ -140,8 +161,9 @@ class CatalogFilterResultMapper
     private function mapProducts(Result|ResultInterface $rawResult, array $attributesMap): array
     {
         $result = [];
-        /** @var Document $document */
-        foreach ($rawResult->getDocuments() as $document) {
+        /** @var Document[] $documents */
+        $documents = $rawResult->getDocuments();
+        foreach ($documents as $document) {
             $fields = $document->getFields();
             $result[] = new Product(
                 guid: $this->getStringValue($fields, 'id'),
@@ -158,8 +180,10 @@ class CatalogFilterResultMapper
 
     private function getIntValue(array $fields, string $key): int
     {
+        /** @psalm-suppress MixedAssignment */
         $value = $fields[$key] ?? throw new Exception("value by `$key` must be");
         if (is_array($value)) {
+            /** @psalm-suppress MixedAssignment */
             $candidat = array_values($value)[0] ?? throw new Exception("value by `$key` must be");
             return (int)$candidat;
         }
@@ -168,8 +192,10 @@ class CatalogFilterResultMapper
 
     private function getStringValue(array $fields, string $key): string
     {
+        /** @psalm-suppress MixedAssignment */
         $value = $fields[$key] ?? throw new Exception("value by `$key` must be");
         if (is_array($value)) {
+            /** @psalm-suppress MixedAssignment */
             $candidat = array_values($value)[0] ?? throw new Exception("value by `$key` must be");
             return (string)$candidat;
         }
@@ -178,8 +204,10 @@ class CatalogFilterResultMapper
 
     private function getFloatValue(array $fields, string $key): float
     {
+        /** @psalm-suppress MixedAssignment */
         $value = $fields[$key] ?? throw new Exception("value by `$key` must be");
         if (is_array($value)) {
+            /** @psalm-suppress MixedAssignment */
             $candidat = array_values($value)[0] ?? throw new Exception("value by `$key` must be");
             return (float)$candidat;
         }
@@ -187,7 +215,6 @@ class CatalogFilterResultMapper
     }
 
     /**
-     * @param array $fields
      * @param array<int, Attribute> $attributesMap
      * @return list<Attribute>
      * @throws Exception
@@ -195,19 +222,20 @@ class CatalogFilterResultMapper
     private function mapProductAttributes(array $fields, array $attributesMap): array
     {
         $result = [];
+        /** @psalm-suppress MixedAssignment */
         foreach ($fields as $field => $values) {
-            $attrId = $this->parseFieldToAttributeId($field);
+            $attrId = $this->parseFieldToAttributeId((string)$field);
             if (null === $attrId) {
                 continue;
             }
-            $attribute = $attributesMap[$attrId];
+            $attribute = $attributesMap[$attrId] ?? null;
             if (null === $attribute) {
                 continue;
             }
             $result[] = new Attribute(
                 id: $attribute->getId(),
                 name: $attribute->getName(),
-                value: $this->getStringValue(['val'=>$values], 'val'),
+                value: $this->getStringValue(['val' => $values], 'val'),
             );
         }
 

@@ -8,15 +8,13 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-
+use function in_array;
 use function json_decode;
 use function json_last_error;
 use function json_last_error_msg;
-use function in_array;
 use function parse_str;
 use function preg_match;
 use function sprintf;
-
 use const JSON_ERROR_NONE;
 
 final class BodyParamsMiddleware implements MiddlewareInterface
