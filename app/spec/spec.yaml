@@ -168,8 +168,10 @@ paths:
                         properties:
                           id:
                             type: integer
+                            minimum: 1
                           values:
                             type: array
+                            minItems: 1
                             items:
                               type: string
                         required:
@@ -177,8 +179,10 @@ paths:
                           - values
                 group:
                   type: integer
+                  minimum: 1
                 page:
                   type: integer
+                  minimum: 1
                 pageSize:
                   type: integer
               required:
@@ -191,13 +195,13 @@ paths:
                     name: string
                     costFrom: 0
                     costTo: 0
-                    delivery: 0
+                    delivery: 1
                     attr:
                       - id: 1
                         values:
                           - string
                   group: 1
-                  page: 0
+                  page: 1
                   pageSize: 10
         description: ''
       description: get products with filters by filter
