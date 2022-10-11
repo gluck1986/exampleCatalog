@@ -11,8 +11,6 @@ use App\Service\CatalogFilter\Dto\FilterResultDto;
 use App\Service\CatalogFilter\Dto\SummaryDto;
 use Exception;
 use Solarium\Component\Result\Facet\Field;
-use Solarium\Component\Result\Stats\Stats;
-use Solarium\Core\Query\DocumentInterface;
 use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Select\Result\Document;
 use Solarium\QueryType\Select\Result\Result;
@@ -45,7 +43,7 @@ class CatalogFilterResultMapper
         if ($criteriaDto->pageSize === 0) {
             $totalPages = 0;
         } else {
-            $totalPages = (int)ceil($rawResult->getNumFound() ?? 0 / $criteriaDto->pageSize);
+            $totalPages = (int)ceil(($rawResult->getNumFound() ?? 0) / $criteriaDto->pageSize);
         }
 
         $summary = new SummaryDto(
